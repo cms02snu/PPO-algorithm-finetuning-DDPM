@@ -1,0 +1,13 @@
+seed: 42
+device: "cuda"
+data:
+  root: "data/reward"
+  img_size: 64
+train:
+  epochs: 1
+  batch_size: 64
+  lr: 1.0e-4
+ckpt:
+  out: "checkpoints/reward_model.pt"
+log:
+  use_tb: true
