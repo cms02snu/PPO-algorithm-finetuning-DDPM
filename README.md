@@ -77,7 +77,7 @@ In this project, one epoch consists of a single episode thus objective function 
 
 $$ L^{CLIP}(\theta) = min(r(\theta)\hat{A}_t, \mathrm{clip}(r(\theta),1-\epsilon,1+\epsilon)\hat{A}) $$
 
-and $\log r(\theta)$ can be computed practically with
+and $\log r(\theta)$ can be computed practically with (by the knowledge of DDPM)
   
 $$\log r(\theta) = \sum_{t=1}^T \frac{\Vert x_{t-1}-\mu_{old}(x_t,t) \Vert^2 - \Vert x_{t-1}-\mu_\theta(x_t,t) \Vert^2}{2\tilde{\beta}_t} $$
 
