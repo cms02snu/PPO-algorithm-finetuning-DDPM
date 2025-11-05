@@ -61,7 +61,7 @@ tensorboard --logdir logs   # or --logdir runs
 
 ---
 
-## PPO $$L_{\text{CLIP}}$$ configuration (this implementation)
+## PPO $$L^{CLIP}$$ configuration (this implementation)
 
 We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final $$x_0$$.
 
