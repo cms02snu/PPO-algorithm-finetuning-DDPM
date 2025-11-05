@@ -69,18 +69,13 @@ tensorboard --logdir logs   # or --logdir runs
 $$
 L^{\text{CLIP}}(\theta)
 = \hat{\mathbb{E}}\left[
-\min\!\big(r(\theta)\,\hat A,\ \mathrm{clip}(r(\theta),\,1-\varepsilon,\,1+\varepsilon)\,\hat A\big)
+\min\big(r(\theta)\,\hat A,\ \mathrm{clip}(r(\theta),\,1-\varepsilon,\,1+\varepsilon)\,\hat A\big)
 \right]
 $$
 
 with
 
-- $$r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}$$, and a practical estimator via per-step log-ratio:
-  $$
-  \log r(\theta)=\sum_{t=1}^T \log r_t,\qquad
-  \log r_t \propto
-  \frac{\lVert x_{t-1}-\mu_{\mathrm{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\,\tilde\beta_t}
-  $$
+- $$r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}$$, and a practical estimator via per-step log-ratio: $$ \log r(\theta)=\sum_{t=1}^T \log r_t,\qquad\log r_t \propto\frac{\lVert x_{t-1}\mu_{\mathrm{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\,\tilde\beta_t}$$
 - $$\hat A$$: advantage from the Reward Model on $$x_0$$ (non-trainable in this repo).
 
 ### Implementation notes (two-pass, memory-friendly)
