@@ -63,7 +63,7 @@ tensorboard --logdir logs   # or --logdir runs
 
 ## PPO $$L_{\text{CLIP}}$$ configuration (this implementation)
 
-> We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final $$x_0$$.
+We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final $$x_0$$.
 
 ### Objective
 $$ L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min(r_t(\theta)\hat{A}_t, \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t ) \right] $$
