@@ -68,7 +68,7 @@ tensorboard --logdir logs   # or --logdir runs
 ### Objective
 $$
 L^{\text{CLIP}}(\theta)
-= \hat{\mathbb{E}}\!\left[
+= \hat{\mathbb{E}}\left[
 \min\!\big(r(\theta)\,\hat A,\ \mathrm{clip}(r(\theta),\,1-\varepsilon,\,1+\varepsilon)\,\hat A\big)
 \right]
 $$
@@ -79,62 +79,12 @@ with
   $$
   \log r(\theta)=\sum_{t=1}^T \log r_t,\qquad
   \log r_t \propto
-  \frac{\lVert x_{t-1}-\mu_{\text{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\,\tilde\beta_t}
+  \frac{\lVert x_{t-1}-\mu_{\mathrm{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\,\tilde\beta_t}
   $$
 - $$\hat A$$: advantage from the Reward Model on $$x_0$$ (non-trainable in this repo).
-
-### Core hyperparameters
-| Parameter | Meaning | Suggested |
-|---|---|---|
-| `clip_eps` | PPO clipping range for $$r$$ → $$[1-\varepsilon,\,1+\varepsilon]$$ | `0.2` |
-| `per_step_clip` | Clamp for each per-step $$\log r_t$$ | `5.0` |
-| `global_clip` | Clamp for the summed $$\sum_t \log r_t$$ | `10.0` |
-| `sigma_floor` | Lower bound for DDIM $$\sigma_t$$ (stability) | `1e-3` |
-| `ddim_steps` | Number of DDIM reverse steps | `200` |
-| `eta` | DDIM stochasticity (0 → deterministic) | `0.5` |
-| `episodes_per_epoch` | Episodes per epoch | `10` |
-| `microbatch` | Apply grads after this many episodes | `1` |
-| `grad_clip` | Gradient-norm clipping | `1.0` |
 
 ### Implementation notes (two-pass, memory-friendly)
 1. **Pass-1 (no-grad):** run the entire DDIM reverse process; cache minimal per-step stats and the final $$\hat A$$.  
 2. **Pass-2 (with-grad):** accumulate $$\sum_t \nabla_\theta \log r_t$$ step-by-step, applying `per_step_clip` and `global_clip`.  
 3. **Clipped branch handling:** use the *min* form for the loss value, but **apply gradients only when unclipped** (to reduce boundary bias).  
 4. **Stability:** apply `sigma_floor` and `grad_clip`; average gradients over `microbatch` before `optimizer.step()`.
-
-### Update rule (unclipped condition)
-Let $$r_{\text{low}}=1-\varepsilon$$, $$r_{\text{high}}=1+\varepsilon$$.  
-Unclipped if $$(\hat A \ge 0 \land r \le r_{\text{high}})$$ or $$(\hat A < 0 \land r \ge r_{\text{low}})$$.  
-Then accumulate
-$$
-\nabla_\theta L \;=\; -\,\hat A\, r \sum_{t} \nabla_\theta \log r_t
-$$
-(averaged over `microbatch`, followed by `grad_clip` and an optimizer step).
-
----
-
-## Design notes
-- **Policy = DDPM; Reward = classifier on (real,fake) images.**
-- **Sampler:** DDIM (`ddpm/sample.py`), schedules in `ddpm/schedule.py`.
-- **Safety:** gradient clipping + PPO clipping (`ppo/algorithm.py`).
-- **Determinism:** `utils.set_seed(seed, deterministic=True)`.
-
----
-
-## Repro recipes
-```bash
-# quick smoke
-python -m scripts.train_reward_model --cfg configs/smoke.yaml
-python -m scripts.finetune --cfg configs/smoke.yaml
-python -m scripts.eval --cfg configs/smoke.yaml
-
-# full run
-python -m scripts.train_reward_model --cfg configs/default.yaml
-python -m scripts.finetune --cfg configs/default.yaml
-python -m scripts.eval --cfg configs/default.yaml
-```
-
----
-
-
-
