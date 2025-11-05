@@ -66,20 +66,12 @@ tensorboard --logdir logs   # or --logdir runs
 > We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final $$x_0$$.
 
 ### Objective
-$$
-L^{\text{CLIP}}(\theta)
-= \hat{\mathbb{E}}\left[
-\min\big(r(\theta)\,\hat A,\ \mathrm{clip}(r(\theta),\,1-\varepsilon,\,1+\varepsilon)\,\hat A\big)
-\right]
-$$
+$$ L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min(r_t(\theta)\hat{A}_t, \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t ) \right] $$
 
 with
 
-- $$r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}$$, and a practical estimator via per-step log-ratio: $ \log r(\theta)=\sum_{t=1}^T \log r_t,\qquad
-\log r_t \propto
-\frac{\|x_{t-1}-\mu_{\mathrm{old}}\|^2-\|x_{t-1}-\mu_{\theta}\|^2}{2\,\tilde{\beta}_t} $
-
-- $$\hat A$$: advantage from the Reward Model on $$x_0$$ (non-trainable in this repo).
+- $$r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$$
+- $$\hat{A}_t$$: advantage from the reward model on $$x_0$$ (non-trainable in this repo).
 
 ### Implementation notes (two-pass, memory-friendly)
 1. **Pass-1 (no-grad):** run the entire DDIM reverse process; cache minimal per-step stats and the final $$\hat A$$.  
