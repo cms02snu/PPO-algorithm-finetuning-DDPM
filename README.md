@@ -87,7 +87,7 @@ $$ \nabla_\theta L^{CLIP}(\theta) = \hat{A} r(\theta) \sum_{t=1}^T \nabla_\theta
 
 where
 
-$$ r_t(\theta) = \frac{\Vert x_{t-1}-\mu_{old}(x_t,t) \Vert^2 - \Vert x_{t-1}-\mu_\theta(x_t,t) \Vert^2}{2\tilde{\beta}_t} $$
+$$ \log r_t(\theta) = \frac{\Vert x_{t-1}-\mu_{old}(x_t,t) \Vert^2 - \Vert x_{t-1}-\mu_\theta(x_t,t) \Vert^2}{2\tilde{\beta}_t} $$
 
 ### Implementation notes (two-pass, memory-friendly)
 1. **Pass-1 (no-grad):** run the entire DDIM reverse process; cache minimal per-step stats and the final $$\hat A$$.  
