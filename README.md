@@ -75,7 +75,10 @@ $$
 
 with
 
-- $$r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}$$, and a practical estimator via per-step log-ratio: $$ \log r(\theta)=\sum_{t=1}^T \log r_t,\qquad\log r_t \propto\frac{\lVert x_{t-1} \mu_{\mathrm{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\,\tilde{\beta}_t} $$
+- $$r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}$$, and a practical estimator via per-step log-ratio: $$ \log r(\theta)=\sum_{t=1}^T \log r_t,\qquad
+\log r_t \propto
+\frac{\|x_{t-1}-\mu_{\mathrm{old}}\|^2-\|x_{t-1}-\mu_{\theta}\|^2}{2\,\tilde{\beta}_t} $$
+
 - $$\hat A$$: advantage from the Reward Model on $$x_0$$ (non-trainable in this repo).
 
 ### Implementation notes (two-pass, memory-friendly)
