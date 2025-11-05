@@ -1,4 +1,4 @@
-# PPO-finetuning-DDPM
+# ddpm-ppo-finetune
 
 A minimal, reproducible baseline for **PPO-style fine-tuning of a trained DDPM** with an auxiliary **reward model**.
 
