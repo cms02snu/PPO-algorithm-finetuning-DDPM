@@ -6,7 +6,7 @@ A minimal, reproducible baseline for **PPO‑style fine‑tuning of a trained DD
 
 ## What this repo provides
 - **DDPM** backbone (`ddpm/`), **PPO** loop (`ppo/`), **reward model & dataset** (`reward/`)
-- **Configs** in YAML (`configs/*.yaml`) incl. a **smoke test**
+- **Configs** in YAML (`configs/*.yaml`) including a **smoke test**
 - **Scripts**: train reward model → PPO fine‑tune → eval
 - **TensorBoard** logging (via `SummaryWriter`)
 - Reproducibility: `set_seed()`
