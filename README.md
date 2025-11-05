@@ -1,13 +1,13 @@
-# PPO‑finetuning‑DDPM
+# PPO-finetuning-DDPM
 
-A minimal, reproducible baseline for **PPO‑style fine‑tuning of a trained DDPM** with an auxiliary **reward model**.
+A minimal, reproducible baseline for **PPO-style fine-tuning of a trained DDPM** with an auxiliary **reward model**.
 
 ---
 
 ## What this repo provides
 - **DDPM** backbone (`ddpm/`), **PPO** loop (`ppo/`), **reward model & dataset** (`reward/`)
 - **Configs** in YAML (`configs/*.yaml`) including a **smoke test**
-- **Scripts**: train reward model → PPO fine‑tune → eval
+- **Scripts**: train reward model → PPO fine-tune → eval
 - **TensorBoard** logging (via `SummaryWriter`)
 - Reproducibility: `set_seed()`
 
@@ -37,14 +37,14 @@ pip install -r requirements.txt
 data/real/*   data/fake/*     # images for reward model
 ddpm.pth      # (optional) pretrained DDPM weights
 ```
-Set paths in `configs/default.yaml` (or use `configs/smoke.yaml` to sanity‑check CPU execution).
+Set paths in `configs/default.yaml` (or use `configs/smoke.yaml` to sanity-check CPU execution).
 
 ### 2) Train reward model
 ```bash
 python -m scripts.train_reward_model --cfg configs/default.yaml
 ```
 
-### 3) PPO fine‑tune DDPM
+### 3) PPO fine-tune DDPM
 ```bash
 python -m scripts.finetune --cfg configs/default.yaml
 ```
@@ -56,41 +56,85 @@ python -m scripts.eval --cfg configs/default.yaml
 
 ### 5) Monitor logs
 ```bash
-tensorboard --logdir logs
+tensorboard --logdir logs   # or --logdir runs
 ```
 
 ---
 
-## PPO \(L_{\text{CLIP}}\) configuration (this implementation)
+## PPO $$L_{\text{CLIP}}$$ configuration (this implementation)
 
-> We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final \(x_0\).
+> We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final $$x_0$$.
 
 ### Objective
-\[
-L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}\left[\min\big(r(\theta)\,\hat A,\ \text{clip}(r(\theta),\ 1-\varepsilon,\ 1+\varepsilon)\,\hat A\big)\right]
-\]
-with
-- \(r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}\), and a practical estimator via per‑step log‑ratio:
-  \[
-  \log r(\theta)=\sum_{t=1}^T \log r_t
-  \quad\text{with}\quad
-  \log r_t \propto \tfrac{\lVert x_{t-1}-\mu_{\text{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\tilde\beta_t}
-  \]
-- \(\hat A\): advantage from the Reward Model on \(x_0\) (non‑trainable in this repo).
+$$
+L^{\text{CLIP}}(\theta)
+= \hat{\mathbb{E}}\!\left[
+\min\!\big(r(\theta)\,\hat A,\ \mathrm{clip}(r(\theta),\,1-\varepsilon,\,1+\varepsilon)\,\hat A\big)
+\right]
+$$
 
-  ### Implementation notes (two‑pass, memory‑friendly)
-1. **Pass‑1 (no‑grad):** run the entire DDIM reverse process; cache minimal per‑step stats and the final \(\hat A\).  
-2. **Pass‑2 (with‑grad):** accumulate \(\sum_t \nabla_\theta \log r_t\) step‑by‑step, applying `per_step_clip` and `global_clip`.  
+with
+
+- $$r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}$$, and a practical estimator via per-step log-ratio:
+  $$
+  \log r(\theta)=\sum_{t=1}^T \log r_t,\qquad
+  \log r_t \propto
+  \frac{\lVert x_{t-1}-\mu_{\text{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\,\tilde\beta_t}
+  $$
+- $$\hat A$$: advantage from the Reward Model on $$x_0$$ (non-trainable in this repo).
+
+### Core hyperparameters
+| Parameter | Meaning | Suggested |
+|---|---|---|
+| `clip_eps` | PPO clipping range for $$r$$ → $$[1-\varepsilon,\,1+\varepsilon]$$ | `0.2` |
+| `per_step_clip` | Clamp for each per-step $$\log r_t$$ | `5.0` |
+| `global_clip` | Clamp for the summed $$\sum_t \log r_t$$ | `10.0` |
+| `sigma_floor` | Lower bound for DDIM $$\sigma_t$$ (stability) | `1e-3` |
+| `ddim_steps` | Number of DDIM reverse steps | `200` |
+| `eta` | DDIM stochasticity (0 → deterministic) | `0.5` |
+| `episodes_per_epoch` | Episodes per epoch | `10` |
+| `microbatch` | Apply grads after this many episodes | `1` |
+| `grad_clip` | Gradient-norm clipping | `1.0` |
+
+### Implementation notes (two-pass, memory-friendly)
+1. **Pass-1 (no-grad):** run the entire DDIM reverse process; cache minimal per-step stats and the final $$\hat A$$.  
+2. **Pass-2 (with-grad):** accumulate $$\sum_t \nabla_\theta \log r_t$$ step-by-step, applying `per_step_clip` and `global_clip`.  
 3. **Clipped branch handling:** use the *min* form for the loss value, but **apply gradients only when unclipped** (to reduce boundary bias).  
 4. **Stability:** apply `sigma_floor` and `grad_clip`; average gradients over `microbatch` before `optimizer.step()`.
 
 ### Update rule (unclipped condition)
-Let \(r_{\text{low}}=1-\varepsilon\), \(r_{\text{high}}=1+\varepsilon\).  
-Unclipped if \((\hat A \ge 0 \land r \le r_{\text{high}})\) or \((\hat A < 0 \land r \ge r_{\text{low}})\).  
+Let $$r_{\text{low}}=1-\varepsilon$$, $$r_{\text{high}}=1+\varepsilon$$.  
+Unclipped if $$(\hat A \ge 0 \land r \le r_{\text{high}})$$ or $$(\hat A < 0 \land r \ge r_{\text{low}})$$.  
 Then accumulate
-\[
-\nabla_\theta L \;=\; -\,\hat A\, r \sum_t \nabla_\theta \log r_t
-\]
+$$
+\nabla_\theta L \;=\; -\,\hat A\, r \sum_{t} \nabla_\theta \log r_t
+$$
 (averaged over `microbatch`, followed by `grad_clip` and an optimizer step).
 
 ---
+
+## Design notes
+- **Policy = DDPM; Reward = classifier on (real,fake) images.**
+- **Sampler:** DDIM (`ddpm/sample.py`), schedules in `ddpm/schedule.py`.
+- **Safety:** gradient clipping + PPO clipping (`ppo/algorithm.py`).
+- **Determinism:** `utils.set_seed(seed, deterministic=True)`.
+
+---
+
+## Repro recipes
+```bash
+# quick smoke
+python -m scripts.train_reward_model --cfg configs/smoke.yaml
+python -m scripts.finetune --cfg configs/smoke.yaml
+python -m scripts.eval --cfg configs/smoke.yaml
+
+# full run
+python -m scripts.train_reward_model --cfg configs/default.yaml
+python -m scripts.finetune --cfg configs/default.yaml
+python -m scripts.eval --cfg configs/default.yaml
+```
+
+---
+
+
+
