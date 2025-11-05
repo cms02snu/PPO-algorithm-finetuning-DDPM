@@ -1,0 +1,29 @@
+seed: 42
+device: 'gpu'
+
+path:
+  real_img: 'data/real'
+  fake_img: 'data/fake'
+  ddpm: 'ddpm.pth'
+  rm: 'rm.pt'
+
+finetune:
+  lr: 0.000001
+  num_epochs: 10
+  ddim_steps: 200
+  eta: 0.5
+  clip_eps: 0.2
+  episodes_per_epoch: 10
+  grad_clip: 1.0
+  microbatch: 1
+  save: true
+  
+train_reward:
+  num_img: 3000
+  num_noise: 500
+  batch_size: 64
+  num_workers: 2
+  lr: 0.0001
+  label_smoothing: 0.05
+  num_epochs: 10
+  save: true

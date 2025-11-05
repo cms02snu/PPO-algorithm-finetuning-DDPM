@@ -1,0 +1,29 @@
+seed: 42
+device: 'cpu'
+
+path:
+  real_img: 'data/real'
+  fake_img: 'data/fake'
+  ddpm: null
+  rm: null
+
+finetune:
+  lr: 0.000001
+  num_epochs: 1
+  ddim_steps: 1
+  eta: 0.5
+  clip_eps: 0.2
+  episodes_per_epoch: 1
+  grad_clip: 1.0
+  microbatch: 1
+  save: false
+  
+train_reward:
+  num_img: 2
+  num_noise: 0
+  batch_size: 2
+  num_workers: 0
+  lr: 0.0001
+  label_smoothing: 0.05
+  num_epochs: 1
+  save: false
