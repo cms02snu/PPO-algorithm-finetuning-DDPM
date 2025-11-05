@@ -66,7 +66,7 @@ tensorboard --logdir logs   # or --logdir runs
 > We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final $$x_0$$.
 
 ### Objective
-$$ L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min(r_t(\theta)\hat{A}_t, \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t ) \right] $$
+$$ L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min(r_t(\theta)\hat{A}_t,\, \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t ) \right] $$
 
 with
 
@@ -77,9 +77,9 @@ In this project, one epoch consists of a single episode thus objective function 
 
 $$ L^{CLIP}(\theta) = min(r(\theta)\hat{A}_t, \mathrm{clip}(r(\theta),1-\epsilon,1+\epsilon)\hat{A}) $$
 
-and $\log\, r(\theta)$ can be computed practically with
+and $\log \, r(\theta)$ can be computed practically with
   
-$$\log\, r(\theta) \sum_{t=1}^T \frac{\Vert x_{t-1}-\mu_{old}(x_t,t) \Vert^2 - \Vert x_{t-1}-\mu_\theta(x_t,t) \Vert^2}{2\tilde{\beta}_t} $$
+$$\log \, r(\theta) \sum_{t=1}^T \frac{\Vert x_{t-1}-\mu_{old}(x_t,t) \Vert^2 - \Vert x_{t-1}-\mu_\theta(x_t,t) \Vert^2}{2\tilde{\beta}_t} $$
 
 and the gradient is computed with
 
