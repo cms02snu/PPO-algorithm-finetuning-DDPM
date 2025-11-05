@@ -8,7 +8,7 @@ Refer to:
 
 PPO algorithm is an optimizing method of reinforcement learning. We apply this algorithm in finetuning DDPM. Assume we have DDPM trained with CelebA dataset. We train reward model separately and regard DDPM as policy in the reinforcement learning as in the paper.
 
-# PPO‑finetuning‑DDPM (PPO for Diffusion Fine‑Tuning)
+# PPO‑finetuning‑DDPM
 
 A minimal, reproducible baseline for **PPO‑style fine‑tuning of a trained DDPM** with an auxiliary **reward model**.
 
@@ -52,13 +52,11 @@ Set paths in `configs/default.yaml` (or use `configs/smoke.yaml` to sanity‑che
 ### 2) Train reward model
 ```bash
 python -m scripts.train_reward_model --cfg configs/default.yaml
-# logs: runs/ or logs/ (TensorBoard)
 ```
 
 ### 3) PPO fine‑tune DDPM
 ```bash
 python -m scripts.finetune --cfg configs/default.yaml
-# key params: finetune.lr, clip_eps, episodes_per_epoch, microbatch, grad_clip
 ```
 
 ### 4) Evaluate
@@ -68,7 +66,7 @@ python -m scripts.eval --cfg configs/default.yaml
 
 ### 5) Monitor logs
 ```bash
-tensorboard --logdir runs   # or --logdir logs
+tensorboard --logdir logs
 ```
 
 ---
