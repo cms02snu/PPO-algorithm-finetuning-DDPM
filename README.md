@@ -68,9 +68,13 @@ tensorboard --logdir logs   # or --logdir runs
 ### Objective
 $$ L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min(r_t(\theta)\hat{A}_t, \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat{A}_t ) \right] $$
 
+In this project, one epoch consists of a single episode thus objective function is defined:
+
+$$ L^{CLIP}(\theta) = min(r(\theta)\hat{A}_t, \mathrm{clip}(r(\theta),1-\epsilon,1+\epsilon)\hat{A}_t) $$
+
 with
 
-- $$r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$$
+- $$r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$$ which can be calculated practically as $\log r(\theta) \sum_{t=1}^T \frac{\Vert x_{t-1}-\mu_{old}(x_t,t) \Vert^2 - \Vert x_{t-1}-\mu_\theta(x_t,t) \Vert^2}{2\tilde{\beta}_t} $
 - $$\hat{A}_t$$: advantage from the reward model on $$x_0$$ (non-trainable in this repo).
 
 ### Implementation notes (two-pass, memory-friendly)
