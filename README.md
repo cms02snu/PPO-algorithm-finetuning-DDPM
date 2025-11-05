@@ -60,3 +60,37 @@ tensorboard --logdir logs
 ```
 
 ---
+
+## PPO \(L_{\text{CLIP}}\) configuration (this implementation)
+
+> We treat the DDPM as the **policy** and the entire DDIM reverse process as **one episode**. The reward is computed by a **frozen Reward Model** on the final \(x_0\).
+
+### Objective
+\[
+L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}\left[\min\big(r(\theta)\,\hat A,\ \text{clip}(r(\theta),\ 1-\varepsilon,\ 1+\varepsilon)\,\hat A\big)\right]
+\]
+with
+- \(r(\theta)=\tfrac{\pi_\theta}{\pi_{\theta_{\text{old}}}}\), and a practical estimator via per‑step log‑ratio:
+  \[
+  \log r(\theta)=\sum_{t=1}^T \log r_t
+  \quad\text{with}\quad
+  \log r_t \propto \tfrac{\lVert x_{t-1}-\mu_{\text{old}}\rVert^2-\lVert x_{t-1}-\mu_{\theta}\rVert^2}{2\tilde\beta_t}
+  \]
+- \(\hat A\): advantage from the Reward Model on \(x_0\) (non‑trainable in this repo).
+
+  ### Implementation notes (two‑pass, memory‑friendly)
+1. **Pass‑1 (no‑grad):** run the entire DDIM reverse process; cache minimal per‑step stats and the final \(\hat A\).  
+2. **Pass‑2 (with‑grad):** accumulate \(\sum_t \nabla_\theta \log r_t\) step‑by‑step, applying `per_step_clip` and `global_clip`.  
+3. **Clipped branch handling:** use the *min* form for the loss value, but **apply gradients only when unclipped** (to reduce boundary bias).  
+4. **Stability:** apply `sigma_floor` and `grad_clip`; average gradients over `microbatch` before `optimizer.step()`.
+
+### Update rule (unclipped condition)
+Let \(r_{\text{low}}=1-\varepsilon\), \(r_{\text{high}}=1+\varepsilon\).  
+Unclipped if \((\hat A \ge 0 \land r \le r_{\text{high}})\) or \((\hat A < 0 \land r \ge r_{\text{low}})\).  
+Then accumulate
+\[
+\nabla_\theta L \;=\; -\,\hat A\, r \sum_t \nabla_\theta \log r_t
+\]
+(averaged over `microbatch`, followed by `grad_clip` and an optimizer step).
+
+---
